@@ -35,6 +35,27 @@ AUDIX/
         `-- audix_firmware.c
 ```
 
+## Current code flow 
+
+```text
+User Input
+   ↓
+Decision Engine (Python)
+   ↓
+Command Generation
+   ↓
+Serial Manager (UART)
+   ↓
+ESP32 Firmware (ESP-IDF)
+   ↓
+Command Execution
+   ↓
+Response (UART)
+   ↓
+Python Logger (Display)
+```
+
+
 ## Components
 
 ### Python application
