@@ -13,6 +13,8 @@
 #define BUF_SIZE 1024
 
 int volume = 50;
+char mode[30] = "AWARE";
+int is_playing = 0;
 
 void app_main(void)
 {
@@ -31,22 +33,61 @@ void app_main(void)
 
     printf("READY\n");
 
-    while (1) {
-        int len = uart_read_bytes(UART_PORT, data, BUF_SIZE - 1, 100 / portTICK_PERIOD_MS);
+    while (1) 
+    {
+        // Read the buffer content from UART TX which is sent from python applicaton
+        int buffer_len = uart_read_bytes(UART_PORT, data, BUF_SIZE - 1, 100 / portTICK_PERIOD_MS);  
 
-        if (len > 0) {
-            data[len] = '\0';
+        if (buffer_len > 0) 
+        {
+            data[buffer_len] = '\0';     // Convert bytes to C string...
 
-            if (strstr((char*)data, "SET_VOLUME:")) {
-
-                int value = atoi((char*)data + 11);
+            if (strncmp((char*)data, "CMD:SET_VOLUME:", 15) == 0) 
+            {
+                int value = atoi((char*)data + 15);
+                // Calculate the value of ESP32 responce and send it 
                 if (value < 0) value = 0;
                 if (value > 100) value = 100;
+
                 volume = value;
-                printf("OK:VOLUME=%d\n", volume);
-            } 
-            else {
-                printf("ERROR\n");
+
+                printf("RESP:VOLUME:%d\n", volume);                             
+            }
+            else if (strncmp((char*)data, "CMD:GET_VOLUME", 14) == 0)
+            {
+                printf("RESP:VOLUME:%d\n", volume);
+            }
+            else if (strncmp((char*)data, "CMD:PLAY", 8) == 0)
+            {
+                is_playing = 1;
+                printf("RESP:PLAYING:1\n");
+            }
+            else if (strncmp((char*)data, "CMD:PAUSE", 8) == 0)
+            {
+                is_playing = 0;
+                printf("RESP:PLAYING:0\n");
+            }
+            else if (strncmp((char*)data, "CMD:PLAY", 8) == 0)
+            {
+                is_playing = 1;
+                printf("RESP:PLAYING:1\n");
+            }
+            else if (strncmp((char*)data, "CMD:SET_MODE:", 13) == 0) 
+            {
+                char *new_mode = (char*)data + 13;
+                // remove newline if present
+                new_mode[strcspn(new_mode, "\r\n")] = 0;
+                strncpy(mode, new_mode, sizeof(mode) - 1);
+                mode[sizeof(mode) - 1] = '\0';
+                printf("RESP:MODE:%s\n", mode);
+            }
+            else if (strncmp((char*)data, "CMD:GET_MODE", 12) == 0) 
+            {
+                printf("RESP:MODE:%s\n", mode);
+            }
+            else
+            {
+                printf("ERR:INVALID_CMD\n");
             }
         }
     }
