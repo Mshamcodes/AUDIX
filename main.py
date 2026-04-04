@@ -3,10 +3,13 @@
 
 import signal 
 import sys
+import time
 from controller.audio_mode_manager import AudioModeSelection
 from controller.audio_serial_manager import AudioSerialManager
 from controller.audio_responce_parser import AudioResponseParser
 from core.audio_state import AudioState
+from environment.environment_simulator import EnvironmentSimulator
+from ai.ai_module import AIModule
 from utils.logger import log, error
 from config.settings import SERIAL_PORT, BAUD_RATE
 
@@ -89,12 +92,13 @@ def cleanup(serial_manager):
     sys.exit(0)
 
 
-# main loop application
 def main():
     aud_mode_selection = AudioModeSelection()
     aud_serial_manager = AudioSerialManager(SERIAL_PORT, BAUD_RATE)
     aud_command_parser = AudioResponseParser()
     aud_state = AudioState()
+    env = EnvironmentSimulator()
+    ai = AIModule()
 
     log("Application System Started")
 
@@ -102,46 +106,95 @@ def main():
 
     try:
         while True:
-            user_input = input("Enter command -> quiet | aware | transparent | play | pause or exit): ").strip().lower()
+            user_selected_mode = input("Select mode [MANUAL | AI | EXIT] ").strip().lower()
 
-            #  Ignore empty input
-            if not user_input:
+            if not user_selected_mode:
                 continue
 
-            if user_input == "exit":
-                log("System Stopped")
-                break
+            if user_selected_mode == "exit":
+                cleanup(aud_serial_manager)
 
-            if user_input not in valid_inputs:
-                error("Invalid input. Use: quiet / aware / transparent / play / pause")
+            if user_selected_mode not in {"manual", "ai"}:
+                error("Invalid mode. Use 'manual' or 'ai'")
                 continue
 
-            #  Decision layer
-            action, value = aud_mode_selection.decide_aud_mode(user_input)
+            # MANUAL MODE LOOP
+            if user_selected_mode == "manual":
+                log("Entered MANUAL mode")
 
-            #  Build command
-            command = build_command(action, value)
+                while True:
+                    user_input = input("Manual → quiet | aware | transparent | play | pause | back: ").strip().lower()
 
-            if not command:
-                error("Failed to build command")
-                continue
+                    if not user_input:
+                        continue
 
-            #  Send command to ESP32 application (USB to UART)
-            response = aud_serial_manager.send_command(command) 
+                    if user_input == "back":
+                        log("Exiting MANUAL mode")
+                        break
 
-            log(f"Sent: {command}")
-            log(f"ESP32: {response}")
+                    if user_input not in valid_inputs:
+                        error("Invalid input")
+                        continue
 
-            #  Parse + Handle  
-            parsed = aud_command_parser.aud_parse_response(response)
-            handle_response(parsed, aud_serial_manager, aud_command_parser, aud_state)
+                    action, value = aud_mode_selection.decide_aud_mode(user_input)
 
-            print(aud_state)
-    
+                    command = build_command(action, value)
+
+                    if not command:
+                        error("Failed to build command")
+                        continue
+
+                    response = aud_serial_manager.send_command(command)
+
+                    log(f"Sent: {command}")
+                    log(f"ESP32: {response}")
+
+                    parsed = aud_command_parser.aud_parse_response(response)
+                    handle_response(parsed, aud_serial_manager, aud_command_parser, aud_state)
+
+                    print(aud_state)
+
+            # AI MODE LOOP
+            elif user_selected_mode == "ai":
+                    log("AI MODE → One-shot decision")
+
+                    # 1. Read environment
+                    env_data = env.get_environment()
+                    log(f"ENVIRONMENT: {env_data}")
+
+                    # 2. AI decision WITH state awareness
+                    action, value = ai.tap_action(env_data, aud_state)
+                    log(f"AI DECISION -> Action: {action}, Value: {value}")
+
+                    # 3. IMPORTANT: Skip if no change needed
+                    if action == "none":
+                        log("AI: No change required ✅")
+                        continue
+
+                    # 4. Build command
+                    command = build_command(action, value)
+
+                    if not command:
+                        error("Failed to build command")
+                        continue
+
+                    # 5. Send command
+                    response = aud_serial_manager.send_command(command)
+
+                    log(f"Sent: {command}")
+                    log(f"ESP32: {response}")
+
+                    # 6. Handle response
+                    parsed = aud_command_parser.aud_parse_response(response)
+                    handle_response(parsed, aud_serial_manager, aud_command_parser, aud_state)
+
+                    print(aud_state)
+
+                    time.sleep(2)
+
     except KeyboardInterrupt:
         log("Keyboard recieved Ctrl+C")
         cleanup(aud_serial_manager)
-
 
 if __name__ == "__main__":
     main()
