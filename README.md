@@ -179,7 +179,6 @@ ENVIRONMENT: {'noise_level': 54}
 AI DECISION -> set_volume 60
 VOLUME VERIFIED ✅
 STATE UPDATED -> AudioState(volume=60, ...)
-```
 
 OUTPUT: 
 PS C:\Users\Mahadev GI\AUDIX> python .\main.py
@@ -240,6 +239,7 @@ Select mode [MANUAL | AI | EXIT] AI
 Select mode [MANUAL | AI | EXIT] [2026-04-06 01:06:38] Keyboard recieved Ctrl+C
 [2026-04-06 01:06:38] Shutting down system
 PS C:\Users\Mahadev GI\AUDIX> 
+```
 
 ---
 
