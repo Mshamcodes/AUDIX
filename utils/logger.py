@@ -1,5 +1,10 @@
-# FILE: logger.py
-# Purpose: Simple logger for the application
+"""
+@file logger.py
+@brief Simple Logging Utility for AUDIX System
+
+This module provides basic logging functions for the application,
+including timestamped standard logs and error messages.
+"""
 
 from datetime import datetime
 

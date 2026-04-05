@@ -1,7 +1,33 @@
-// FILE: audix_firmware.c 
-// This file is the main entry point for the ESP32 firmware. 
-// It initializes the necessary components and handles communication with the Python application.
-
+/**
+ * @file audix_firmware.c
+ * @brief ESP32 Firmware for AUDIX Audio Control System
+ *
+ * This firmware handles UART communication between the ESP32 and a Python-based
+ * control application. It parses incoming commands and updates audio system state.
+ *
+ * Supported features:
+ * - Volume control
+ * - Play/Pause control
+ * - Mode management
+ * - State query commands
+ *
+ * Communication Protocol:
+ *   CMD:<ACTION>[:VALUE]
+ *
+ * Example Commands:
+ *   CMD:SET_VOLUME:80
+ *   CMD:GET_VOLUME
+ *   CMD:PLAY
+ *   CMD:PAUSE
+ *   CMD:SET_MODE:AWARE
+ *   CMD:GET_MODE
+ *
+ * Example Responses:
+ *   RESP:VOLUME:80
+ *   RESP:PLAYING:1
+ *   RESP:MODE:AWARE
+ *   ERR:INVALID_CMD
+ */
 
 #include <stdio.h>
 #include <string.h>

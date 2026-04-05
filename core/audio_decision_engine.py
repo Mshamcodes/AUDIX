@@ -1,10 +1,25 @@
-# FILE: audio_decision_engine.py
-# Purpose: Core audio decision engine for the application
+"""
+@file audio_decision_engine.py
+@brief Core Audio Decision Engine for AUDIX System
+
+This module manages the internal audio state and applies validated updates
+based on system commands.
+
+It acts as the control layer between:
+- Input commands (manual/AI)
+- Audio state management
+
+Features:
+- Volume control with safety constraints
+- Mode validation
+- Playback state management
+
+"""
 
 from core.audio_state import AudioState
 
 
-class AudioDecisonEngine:
+class AudioDecisionEngine:
     def __init__(self):
         self.aud_state = AudioState()
 
@@ -33,7 +48,7 @@ class AudioDecisonEngine:
 
 # TEST
 if __name__ == "__main__":
-    engine = AudioDecisonEngine()
+    engine = AudioDecisionEngine()
 
     engine.set_volume(100)   # should clamp to 100
     engine.set_mode("QUIET")

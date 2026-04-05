@@ -1,5 +1,15 @@
-# FILE: main.py
-# Purpose: Clean & scalable main application
+"""
+@file main.py
+@brief Main Application Entry Point for AUDIX System
+
+This module integrates all system components:
+- Manual control
+- AI-based decision making
+- UART communication
+- State synchronization
+
+It acts as the central orchestrator of the AUDIX system.
+"""
 
 import signal 
 import sys
@@ -15,7 +25,7 @@ from config.settings import SERIAL_PORT, BAUD_RATE
 
 
 # COMMAND BUILDER
-def build_command(action, value):
+def build_aud_command(action, value):
     if action == "set_volume":
         return f"CMD:SET_VOLUME:{value}"
     elif action == "set_mode":
@@ -82,7 +92,6 @@ def handle_response(parsed, serial_manager, parser, audio_state):
 
     log(f"STATE UPDATED -> {audio_state}")
 
-
 def cleanup(serial_manager):
     log("Shutting down system")
     try:
@@ -123,13 +132,13 @@ def main():
                 log("Entered MANUAL mode")
 
                 while True:
-                    user_input = input("Manual → quiet | aware | transparent | play | pause | back: ").strip().lower()
+                    user_input = input("Manual → quiet | aware | transparent | play | pause | menu: ").strip().lower()
 
                     if not user_input:
                         continue
 
-                    if user_input == "back":
-                        log("Exiting MANUAL mode")
+                    if user_input == "menu":
+                        log("Exiting MANUAL mode and selected MENU option")
                         break
 
                     if user_input not in valid_inputs:
@@ -138,7 +147,7 @@ def main():
 
                     action, value = aud_mode_selection.decide_aud_mode(user_input)
 
-                    command = build_command(action, value)
+                    command = build_aud_command(action, value)
 
                     if not command:
                         error("Failed to build command")
@@ -172,7 +181,7 @@ def main():
                         continue
 
                     # 4. Build command
-                    command = build_command(action, value)
+                    command = build_aud_command(action, value)
 
                     if not command:
                         error("Failed to build command")

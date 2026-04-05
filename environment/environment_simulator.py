@@ -1,5 +1,13 @@
-# FILE: environment_simulator.py
-# Purpose: Manages the environment simulation for the whole system
+"""
+@file environment_simulator.py
+@brief Environment Simulation Module for AUDIX System
+
+This module simulates environmental conditions such as noise level,
+which are used as input for the AI decision engine.
+
+The simulation introduces gradual variation to mimic real-world behavior
+instead of abrupt random changes.
+"""
 
 import random
 

@@ -1,5 +1,18 @@
-# FILE: audio_serial_manager.py
-# Purpose: Manages serial communication for audio settings
+"""
+@file audio_serial_manager.py
+@brief UART Communication Manager for AUDIX System
+
+This module handles serial communication between the Python application
+and the ESP32 firmware using UART (via pyserial).
+
+Features:
+- Command transmission
+- Response reception
+- Retry mechanism
+- Timeout handling
+- Buffer management
+
+"""
 
 import serial
 import time

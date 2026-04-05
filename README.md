@@ -1,195 +1,276 @@
-# AUDIX
+# AUDIX — AI-driven Embedded Audio Control System
 
-AUDIX is a small audio-control prototype made of two parts:
+## 🚀 Overview
 
-- A Python controller app that decides a target volume from an environment label and sends commands over serial.
-- An ESP32 firmware project that receives serial commands and applies the requested volume value.
+AUDIX is an intelligent embedded audio control system that dynamically adjusts volume based on environmental conditions.
 
-The current flow is simple:
+It integrates:
 
-1. Run the ESP32 firmware on the board.
-2. Run the Python app on the host machine.
-3. Enter an environment such as `quiet`, `noise`, or `speech`.
-4. The Python app sends `SET_VOLUME:<value>` to the ESP32.
-5. The firmware replies with `OK:VOLUME=<value>`.
+* Python-based AI decision engine
+* UART communication (Python ↔ ESP32)
+* ESP32 firmware using ESP-IDF
+* State-aware control with verification and stability logic
 
-## Repository Layout
+---
+
+## 🧠 Key Features
+
+* ✅ Manual & AI modes
+* ✅ AI-based adaptive volume control
+* ✅ State-aware decision system (self-correcting)
+* ✅ Hysteresis (anti-flicker control)
+* ✅ Reliable UART communication
+* ✅ Retry & timeout handling
+* ✅ Response verification (closed-loop system)
+
+---
+
+## 🏗️ Architecture
+
+```text
+Environment → AI → Command → UART → ESP32 → Response → State Update
+```
+
+Detailed flow:
+
+```text
+Environment (Simulated Noise)
+        ↓
+AI Decision Engine
+        ↓
+Command Builder
+        ↓
+Serial Manager (UART)
+        ↓
+ESP32 Firmware (ESP-IDF)
+        ↓
+Response Parsing
+        ↓
+State Synchronization
+```
+
+---
+
+## 📂 Project Structure
 
 ```text
 AUDIX/
-|-- main.py
-|-- config/
-|   `-- settings.py
-|-- controller/
-|   |-- audio_decisions_engine.py
-|   `-- audio_serial_manager.py
-|-- core/
-|   |-- audio_state.py
-|   `-- audio_state_engine.py
-|-- utils/
-|   `-- logger.py
-`-- audix_firmware/
-    |-- CMakeLists.txt
-    `-- main/
-        |-- CMakeLists.txt
-        `-- audix_firmware.c
+│
+├── main.py
+├── README.md
+├── requirements.txt
+│
+├── controller/
+│   ├── audio_serial_manager.py
+│   ├── audio_response_parser.py
+│   └── audio_mode_manager.py
+│
+├── core/
+│   └── audio_state.py
+│
+├── ai/
+│   └── ai_module.py
+│
+├── environment/
+│   └── environment_simulator.py
+│
+├── utils/
+│   └── logger.py
+│
+├── config/
+│   └── settings.py
+│
+└── firmware/
+    └── audix_firmware.c
 ```
 
-## Current code flow 
+---
+
+## 🎮 Modes of Operation
+
+### 🔵 Manual Mode
+
+User directly controls audio:
 
 ```text
-User Input
-   ↓
-Decision Engine (Python)
-   ↓
-Command Generation
-   ↓
-Serial Manager (UART)
-   ↓
-ESP32 Firmware (ESP-IDF)
-   ↓
-Command Execution
-   ↓
-Response (UART)
-   ↓
-Python Logger (Display)
+quiet / aware / transparent / play / pause
 ```
 
+---
 
-## Components
+### 🟢 AI Mode
 
-### Python application
+System automatically adjusts volume based on environment:
 
-- [`main.py`](/c:/Users/Mahadev%20GI/AUDIX/main.py) is the host-side entry point.
-- [`controller/audio_decisions_engine.py`](/c:/Users/Mahadev%20GI/AUDIX/controller/audio_decisions_engine.py) maps environment labels to volume levels.
-- [`controller/audio_serial_manager.py`](/c:/Users/Mahadev%20GI/AUDIX/controller/audio_serial_manager.py) sends commands to the ESP32 over UART using `pyserial`.
-- [`config/settings.py`](/c:/Users/Mahadev%20GI/AUDIX/config/settings.py) defines the serial port and baud rate.
+* Reads simulated noise level
+* Applies hysteresis-based decision
+* Avoids unnecessary commands
+* Maintains system stability
 
-Current environment mapping:
+---
 
-- `quiet` -> `30`
-- `speech` -> `50`
-- `noise` -> `80`
+## 🔧 Serial Protocol
 
-### ESP32 firmware
+### Commands (Python → ESP32)
 
-- [`audix_firmware/main/audix_firmware.c`](/c:/Users/Mahadev%20GI/AUDIX/audix_firmware/main/audix_firmware.c) initializes UART0 at `115200`, waits for serial input, parses `SET_VOLUME:<value>`, clamps the value to `0..100`, and returns a status string.
-- [`audix_firmware/CMakeLists.txt`](/c:/Users/Mahadev%20GI/AUDIX/audix_firmware/CMakeLists.txt) defines the ESP-IDF project.
-- [`audix_firmware/main/CMakeLists.txt`](/c:/Users/Mahadev%20GI/AUDIX/audix_firmware/main/CMakeLists.txt) registers the firmware source file with ESP-IDF.
-
-## Requirements
-
-### Host machine
-
-- Python 3.10+ recommended
-- `pyserial`
-- A Windows serial port connection to the ESP32 board
-
-Install the Python dependency manually for now because [`requirements.txt`](/c:/Users/Mahadev%20GI/AUDIX/requirements.txt) is currently empty:
-
-```powershell
-pip install pyserial
+```text
+CMD:SET_VOLUME:<value>
+CMD:PLAY
+CMD:PAUSE
 ```
 
-### Firmware toolchain
+### Responses (ESP32 → Python)
 
-- ESP-IDF v5.3.x
-- ESP32 target support installed
-- ESP-IDF PowerShell environment opened before running `idf.py`
+```text
+RESP:VOLUME:<value>
+RESP:PLAYING:<0/1>
+ERR:<message>
+```
 
-## Configuration
+---
 
-Set the serial port in [`config/settings.py`](/c:/Users/Mahadev%20GI/AUDIX/config/settings.py) before running the Python app:
+## ⚙️ How to Run
+
+### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### 2. Configure Serial Port
+
+Edit:
+
+```python
+config/settings.py
+```
 
 ```python
 SERIAL_PORT = "COM9"
 BAUD_RATE = 115200
 ```
 
-Update `COM9` to the port exposed by your ESP32 board on your machine.
+---
 
-## Build the firmware
+### 3. Flash ESP32 Firmware
 
-From the firmware project directory:
-
-```powershell
-cd "C:\Users\Mahadev GI\AUDIX\audix_firmware"
-idf.py build
-```
-
-If you need a clean rebuild:
-
-```powershell
-idf.py fullclean
-idf.py build
-```
-
-If the build fails with a Git safe-directory error for ESP-IDF, add the ESP-IDF folders to Git's safe directory list:
-
-```powershell
-git config --global --add safe.directory C:/Espressif/frameworks/esp-idf-v5.3.1
-git config --global --add safe.directory C:/Espressif/frameworks/esp-idf-v5.3.1/components/openthread/openthread
-```
-
-## Flash the firmware
-
-Replace `COM3` with your actual ESP32 port:
-
-```powershell
-idf.py -p COM3 flash
-```
-
-Build, flash, and monitor in one command:
-
-```powershell
+```bash
 idf.py -p COM3 flash monitor
 ```
 
-Open the serial monitor only:
+---
 
-```powershell
-idf.py -p COM3 monitor
-```
+### 4. Run Python Application
 
-Exit the monitor with `Ctrl+]`.
-
-## Run the Python controller
-
-From the repository root:
-
-```powershell
-cd "C:\Users\Mahadev GI\AUDIX"
+```bash
 python main.py
 ```
 
-Example session:
+---
+
+## 🧪 Example Usage
 
 ```text
-Enter environment (quiet/noise/speech or 'exit'): quiet
-Sent: SET_VOLUME:30
-ESP32: OK:VOLUME=30
+Select mode [MANUAL | AI | EXIT]: AI
+
+ENVIRONMENT: {'noise_level': 54}
+AI DECISION -> set_volume 60
+VOLUME VERIFIED ✅
+STATE UPDATED -> AudioState(volume=60, ...)
 ```
 
-Type `exit` to stop the host application.
+OUTPUT: 
+PS C:\Users\Mahadev GI\AUDIX> python .\main.py
+[2026-04-06 00:42:10] Application System Started
+Select mode [MANUAL | AI | EXIT] AI
+[2026-04-06 00:42:13] AI MODE → One-shot decision
+[2026-04-06 00:42:13] ENVIRONMENT: {'noise_level': 50}
+[2026-04-06 00:42:13] AI DECISION -> Action: set_volume, Value: 50
+[2026-04-06 00:42:13] Sent: CMD:SET_VOLUME:50
+[2026-04-06 00:42:13] ESP32: RESP:VOLUME:50
+[2026-04-06 00:42:13] VERIFY VOLUME: RESP:VOLUME:50
+[2026-04-06 00:42:13] VOLUME VERIFIED ✅
+[2026-04-06 00:42:13] STATE UPDATED -> AudioState(volume=50, mode='AWARE', is_playing=False)
+AudioState(volume=50, mode='AWARE', is_playing=False)
+Select mode [MANUAL | AI | EXIT] MANUAL
+[2026-04-06 00:42:18] Entered MANUAL mode
+Manual → quiet | aware | transparent | play | pause | menu: aware
+[2026-04-06 00:42:20] Sent: CMD:SET_VOLUME:80
+[2026-04-06 00:42:20] ESP32: RESP:VOLUME:80
+[2026-04-06 00:42:20] VERIFY VOLUME: RESP:VOLUME:80
+[2026-04-06 00:42:20] VOLUME VERIFIED ✅
+[2026-04-06 00:42:20] STATE UPDATED -> AudioState(volume=80, mode='AWARE', is_playing=False)
+AudioState(volume=80, mode='AWARE', is_playing=False)
+Manual → quiet | aware | transparent | play | pause | menu: menu
+[2026-04-06 00:42:24] Exiting MANUAL mode and selected MENU option
+Select mode [MANUAL | AI | EXIT] AI
+[2026-04-06 00:42:27] AI MODE → One-shot decision
+[2026-04-06 00:42:27] ENVIRONMENT: {'noise_level': 51}
+[2026-04-06 00:42:27] AI DECISION -> Action: set_volume, Value: 50
+[2026-04-06 00:42:27] Sent: CMD:SET_VOLUME:50
+[2026-04-06 00:42:27] ESP32: RESP:VOLUME:50
+[2026-04-06 00:42:27] VERIFY VOLUME: RESP:VOLUME:50
+[2026-04-06 00:42:27] VOLUME VERIFIED ✅
+[2026-04-06 00:42:27] STATE UPDATED -> AudioState(volume=50, mode='AWARE', is_playing=False)
+AudioState(volume=50, mode='AWARE', is_playing=False)
+Select mode [MANUAL | AI | EXIT] AI
+[2026-04-06 00:42:30] AI MODE → One-shot decision
+[2026-04-06 00:42:30] ENVIRONMENT: {'noise_level': 51}
+[2026-04-06 00:42:30] AI DECISION -> Action: none, Value: None
+[2026-04-06 00:42:30] AI: No change required ✅
+Select mode [MANUAL | AI | EXIT] MANUAL
+[2026-04-06 00:42:54] Entered MANUAL mode
+Manual → quiet | aware | transparent | play | pause | menu: play
+[2026-04-06 00:42:55] Sent: CMD:PLAY
+[2026-04-06 00:42:55] ESP32: RESP:PLAYING:1
+[2026-04-06 00:42:55] PLAY STATE UPDATED ✅
+[2026-04-06 00:42:55] STATE UPDATED -> AudioState(volume=50, mode='AWARE', is_playing=True)
+AudioState(volume=50, mode='AWARE', is_playing=True)
+Manual → quiet | aware | transparent | play | pause | menu: MENU
+[2026-04-06 00:43:02] Exiting MANUAL mode and selected MENU option
+Select mode [MANUAL | AI | EXIT] back
+[2026-04-06 00:43:06] ERROR: Invalid mode. Use 'manual' or 'ai'
+Select mode [MANUAL | AI | EXIT] AI
+[2026-04-06 00:43:07] AI MODE → One-shot decision
+[2026-04-06 00:43:07] ENVIRONMENT: {'noise_level': 53}
+[2026-04-06 00:43:07] AI DECISION -> Action: none, Value: None
+[2026-04-06 00:43:07] AI: No change required ✅
+Select mode [MANUAL | AI | EXIT] [2026-04-06 01:06:38] Keyboard recieved Ctrl+C
+[2026-04-06 01:06:38] Shutting down system
+PS C:\Users\Mahadev GI\AUDIX> 
 
-## Current Serial Protocol
+---
 
-Command sent by host:
+## 🧠 AI Logic
 
-```text
-SET_VOLUME:<0-100>
-```
+* Uses environment input (noise level)
+* Applies hysteresis to prevent flickering
+* Uses system state to avoid redundant commands
+* Acts only when change is required
 
-Responses returned by firmware:
+---
 
-```text
-READY
-OK:VOLUME=<value>
-ERROR
-```
+## 🔮 Future Improvements
 
-## Notes    
+* Command ID protocol (async communication)
+* FreeRTOS-based firmware architecture
+* Real microphone input
+* Machine learning-based decision engine
 
-- `idf.py build` builds the whole ESP-IDF project, not an individual `.c` file directly.
-- The repository currently contains both a Python prototype flow and supporting audio state classes. The main runnable host path is [`main.py`](/c:/Users/Mahadev%20GI/AUDIX/main.py).
-- [`sdkconfig`](/c:/Users/Mahadev%20GI/AUDIX/sdkconfig) is ignored by Git in this repository's current `.gitignore`, so board-specific config may exist locally without being committed.
+---
+
+## 💡 Key Learning Outcomes
+
+* Embedded system communication (UART)
+* State machine design
+* AI-driven control systems
+* Reliability (retry, timeout, verification)
+* Control system concepts (hysteresis)
+
+---
+
+## 👨‍💻 Author
+
+Mahadev G I

@@ -1,5 +1,16 @@
-# FILE: audio_state.py
-# Purpose: Audio state management for the application
+"""
+@file audio_state.py
+@brief Audio State Model for AUDIX System
+
+This module defines the AudioState class, which represents the current
+state of the audio system.
+
+It acts as a single source of truth for:
+- Volume level
+- Audio mode
+- Playback status
+
+"""
 
 class AudioState: 
     def __init__(self):

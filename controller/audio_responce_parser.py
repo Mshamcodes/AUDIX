@@ -1,5 +1,16 @@
-# FILE: audio_response_parser.py
-# Purpose: Parses responses from the ESP32 and extracts relevant information
+"""
+@file audio_response_parser.py
+@brief UART Response Parser for AUDIX System
+
+This module parses responses received from the ESP32 firmware over UART
+and converts them into structured Python dictionaries.
+
+Supported response formats:
+- RESP:VOLUME:<int>
+- RESP:MODE:<string>
+- RESP:PLAYING:<0/1>
+- ERR:<message>
+"""
 
 class AudioResponseParser:
     def aud_parse_response(self, response: str):
